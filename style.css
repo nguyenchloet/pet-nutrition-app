@@ -936,6 +936,70 @@ main {
     padding: 0.2rem 0.5rem;
 }
 
+
+.duplicate-feeding-dialog {
+    width: min(420px, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 28px;
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    color: #222;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.duplicate-feeding-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.duplicate-feeding-dialog h3 {
+    margin: 0 0 12px;
+}
+
+.duplicate-feeding-dialog p {
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.duplicate-feeding-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.duplicate-feeding-actions button {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.duplicate-feeding-actions .primary {
+    background: #303f35;
+    color: white;
+    border: 1px solid #303f35;
+}
+
+.duplicate-feeding-actions .secondary {
+    background: white;
+    color: #303f35;
+    border: 1px solid #303f35;
+}
+
+.duplicate-feeding-actions .cancel {
+    background: transparent;
+    color: #555;
+    border: none;
+}
+
+.duplicate-feeding-actions button:focus-visible {
+    outline: 3px solid #668a74;
+    outline-offset: 2px;
+}
+
 @media (max-width: 600px) {
     .weight-history-table th,
     .weight-history-table td {

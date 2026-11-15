@@ -2192,8 +2192,71 @@ function normalizeFeedingTime(input) {
     return `${hours.padStart(2, "0")}:${minutes}`;
 }
 
+
+function showDuplicateFeedingDialog(petName, time, existingGrams, newGrams) {
+    return new Promise(resolve => {
+        const dialog = document.createElement("dialog");
+        dialog.className = "duplicate-feeding-dialog";
+
+        const heading = document.createElement("h3");
+        heading.textContent = "Feeding already recorded";
+
+        const description = document.createElement("p");
+        description.textContent =
+            `${petName} already has ${existingGrams} g recorded at ${time}. ` +
+            `What would you like to do with the additional ${newGrams} g?`;
+
+        const actions = document.createElement("div");
+        actions.className = "duplicate-feeding-actions";
+
+        const choices = [
+            {
+                label: `Add to existing (${existingGrams + newGrams} g total)`,
+                value: "combine",
+                className: "primary"
+            },
+            {
+                label: `Create separate feeding (${newGrams} g)`,
+                value: "new",
+                className: "secondary"
+            },
+            {
+                label: "Cancel",
+                value: "cancel",
+                className: "cancel"
+            }
+        ];
+
+        let selectedAction = "cancel";
+
+        choices.forEach(choice => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = choice.label;
+            button.className = choice.className;
+
+            button.addEventListener("click", () => {
+                selectedAction = choice.value;
+                dialog.close();
+            });
+
+            actions.appendChild(button);
+        });
+
+        dialog.append(heading, description, actions);
+        document.body.appendChild(dialog);
+
+        dialog.addEventListener("close", () => {
+            dialog.remove();
+            resolve(selectedAction);
+        }, { once: true });
+
+        dialog.showModal();
+    });
+}
+
 /* Allow input of historical feeding record if non exists */
-function addHistoricalDryFeeding(date, petId, grams, time) {
+function addHistoricalDryFeeding(date, petId, grams, time, duplicateAction = "new") {
     const history = JSON.parse(localStorage.getItem("feedingHistory") || "[]");
     const dayRecord = history.find(record => record.date === date);
 
@@ -2210,18 +2273,38 @@ function addHistoricalDryFeeding(date, petId, grams, time) {
 
     const caloriesPerGram = savedPet.dryFoodCaloriesPerGram ?? dryFoodCaloriesPerGram;
 
-    const newFeeding = {
-        id: crypto.randomUUID(),
-        grams,
-        time,
-        calories: grams * caloriesPerGram,
-        completed: true,
-        method: "manual"
-    };
+    const existingFeeding = savedPet.dryFeedings.find(
+        feeding => normalizeFeedingTime(feeding.time) === time
+    );
 
-    savedPet.dryFeedings.push(newFeeding);
+     if (existingFeeding && duplicateAction === "combine") {
+        existingFeeding.grams = Number(existingFeeding.grams) + grams;
+        existingFeeding.calories =
+            existingFeeding.grams * caloriesPerGram;
+        existingFeeding.completed = true;
+    } else if (duplicateAction === "new") {
+        savedPet.dryFeedings.push({
+            id: crypto.randomUUID(),
+            grams,
+            time,
+            calories: grams * caloriesPerGram,
+            completed: true,
+            method: "manual"
+        });
+    } else {
+        return false;
+    }
 
-    savedPet.dryCalories = calculateDryFoodCalories(savedPet.dryFeedings);
+    /* Recalculate calories using this pet's saved food density */
+    savedPet.dryCalories = savedPet.dryFeedings.reduce(
+        (total, feeding) =>
+            total + (
+                feeding.completed
+                ? feeding.grams * caloriesPerGram
+                : 0
+            ),
+        0
+    );
 
     const wetCalories = Array.isArray(savedPet.wetFeedings) 
         ? savedPet.wetFeedings.reduce(
@@ -2462,7 +2545,7 @@ function displayFeedingHistory() {
             addDryFeedingButton.type = "button";
             addDryFeedingButton.textContent = "Add Feeding";
 
-            addDryFeedingButton.addEventListener("click", () => {
+            addDryFeedingButton.addEventListener("click", async () => {
                 const gramsInput = prompt(`Enter dry food quantity in grams for ${displayName}:`)
             
                 if (gramsInput === null) return;
@@ -2489,11 +2572,44 @@ function displayFeedingHistory() {
                     return;
                 }
 
+                let duplicateAction = "new";
+
+                const history = JSON.parse(localStorage.getItem("feedingHistory") || "[]");
+
+                const dayRecord = history.find(
+                    day => day.date === record.date
+                );
+
+                const savedPet = (dayRecord?.pets || dayRecord?.cats || [])
+                    .find(saved => saved.id === pet.id);
+
+                if (!savedPet) {
+                    alert("Historical pet record not found.");
+                    return;
+                }
+
+                const existingFeeding = (savedPet.dryFeedings || []).find(
+                    feeding => 
+                        normalizeFeedingTime(feeding.time) === normalizedTime
+                );
+
+                if (existingFeeding) {
+                    duplicateAction = await showDuplicateFeedingDialog(
+                        displayName,
+                        normalizedTime,
+                        Number(existingFeeding.grams),
+                        grams
+                    );
+
+                    if (duplicateAction === "cancel") return;
+                }
+
                 const added = addHistoricalDryFeeding(
                     record.date,
                     pet.id,
                     grams,
-                    normalizedTime
+                    normalizedTime,
+                    duplicateAction
                 );
 
                 if (added) {
