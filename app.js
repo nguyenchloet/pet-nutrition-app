@@ -2179,6 +2179,69 @@ function getFeedingHistory() {
     return history.sort((a, b) => b.date.localeCompare(a.date));
 }
 
+function normalizeFeedingTime(input) {
+    if (typeof input !== "string") return null;
+
+    const time = input.trim();
+    const timePattern = /^([01]?\d|2[0-3]):[0-5]\d$/;
+
+    if (!timePattern.test(time)) return null;
+
+    const [hours, minutes] = time.split(":");
+
+    return `${hours.padStart(2, "0")}:${minutes}`;
+}
+
+/* Allow input of historical feeding record if non exists */
+function addHistoricalDryFeeding(date, petId, grams, time) {
+    const history = JSON.parse(localStorage.getItem("feedingHistory") || "[]");
+    const dayRecord = history.find(record => record.date === date);
+
+    if (!dayRecord) return false;
+
+    const savedPets = dayRecord.pets || dayRecord.cats || [];
+    const savedPet = savedPets.find(pet => pet.id === petId);
+
+    if (!savedPet) return false;
+
+    if (!Array.isArray(savedPet.dryFeedings)) {
+        savedPet.dryFeedings = [];
+    }
+
+    const caloriesPerGram = savedPet.dryFoodCaloriesPerGram ?? dryFoodCaloriesPerGram;
+
+    const newFeeding = {
+        id: crypto.randomUUID(),
+        grams,
+        time,
+        calories: grams * caloriesPerGram,
+        completed: true,
+        method: "manual"
+    };
+
+    savedPet.dryFeedings.push(newFeeding);
+
+    savedPet.dryCalories = calculateDryFoodCalories(savedPet.dryFeedings);
+
+    const wetCalories = Array.isArray(savedPet.wetFeedings) 
+        ? savedPet.wetFeedings.reduce(
+            (total, feeding) =>
+                total + (feeding.completed ? feeding.calories : 0),
+            0
+        )
+        : (savedPet.wetFoodCompleted ?? savedPet.wetFoodEaten ?? false)
+            ? (savedPet.wetFood?.calories ?? 0)
+            : 0;
+        
+        savedPet.totalCaloriesConsumed = savedPet.dryCalories + wetCalories;
+
+        localStorage.setItem(
+            "feedingHistory",
+            JSON.stringify(history)
+        );
+        return true;
+}
+
 function updateFeedingHistoryRecord(date, petId, feedingType, feedingId, changes) {
     const history = JSON.parse(
         localStorage.getItem("feedingHistory") || "[]"
@@ -2395,13 +2458,61 @@ function displayFeedingHistory() {
             dryHeading.textContent = "Dry Food";
             details.appendChild(dryHeading);
 
+            const addDryFeedingButton = document.createElement("button");
+            addDryFeedingButton.type = "button";
+            addDryFeedingButton.textContent = "Add Feeding";
+
+            addDryFeedingButton.addEventListener("click", () => {
+                const gramsInput = prompt(`Enter dry food quantity in grams for ${displayName}:`)
+            
+                if (gramsInput === null) return;
+
+                const grams = Number(gramsInput);
+
+                if (
+                    gramsInput.trim() === "" ||
+                    !Number.isFinite(grams) ||
+                    grams <= 0
+                ) {
+                    alert("Enter a valid quantity greater than zero.");
+                    return;
+                }
+
+                const time = prompt("Enter feeding time (HH:MM, 24 hour format):", "10:30");
+
+                if (time === null) return;
+
+                const normalizedTime = normalizeFeedingTime(time);
+
+                if (normalizedTime === null) {
+                    alert("Enter a valid time, such as 4:45 or 10:30.");
+                    return;
+                }
+
+                const added = addHistoricalDryFeeding(
+                    record.date,
+                    pet.id,
+                    grams,
+                    normalizedTime
+                );
+
+                if (added) {
+                    displayFeedingHistory();
+                } else {
+                    alert("Unable to add feeding to this historical record.");
+                }
+
+            });
+
+            details.appendChild(addDryFeedingButton);
+
             if (!pet.dryFeedings || pet.dryFeedings.length === 0) {
                 const message = document.createElement("p");
                 message.textContent = "No dry feedings recorded.";
                 details.appendChild(message);
             }
 
-            (pet.dryFeedings || []).forEach(feeding => {
+            (pet.dryFeedings || []).forEach((feeding, index) => {
 
                 const feedingItem = document.createElement("p");
 
@@ -2417,7 +2528,7 @@ function displayFeedingHistory() {
                     : "Time not recorded";
 
                 feedingItem.textContent =
-                    `Feeding ${feeding.id}: ${feeding.grams} g ` +
+                    `Feeding ${index + 1}: ${feeding.grams} g ` +
                     `(${calories.toFixed(1)} kcal) — ` +
                     `${recordedTime} - ` +
                     (feeding.completed ? "Eaten" : "Not eaten");
@@ -2430,7 +2541,7 @@ function displayFeedingHistory() {
 
                 editDryGramsButton.addEventListener("click", () => {
                     const input = prompt(
-                        `Enter the new dry food quantity in grams for ${displayName}, feeding ${feeding.id}:`,
+                        `Enter the new dry food quantity in grams for ${displayName}, feeding ${index + 1}:`,
                         feeding.grams.toFixed(1)
                     );
 
@@ -2466,16 +2577,16 @@ function displayFeedingHistory() {
 
                 editDryTimeButton.addEventListener("click", () => {
                     const input = prompt(
-                        `Enter the feeding time for ${pet.name}, dry feeding ${feeding.id} (HH:MM, 24-hour format):`,
+                        `Enter the feeding time for ${pet.name}'s dry feeding ${index + 1} (HH:MM, 24-hour format):`,
                         feeding.time || ""
                     );
 
                     if (input === null) return;
 
-                    const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+                    const normalizedTime = normalizeFeedingTime(input);
 
-                    if (!timePattern.test(input)) {
-                        alert("Enter a valid time in HH:MM format, such as 10:30.");
+                    if (normalizedTime === null) {
+                        alert("Enter a valid time in HH:MM format, such as 4:45 or 10:30.");
                         return;
                     }
 
@@ -2484,7 +2595,7 @@ function displayFeedingHistory() {
                         pet.id,
                         "dry",
                         feeding.id,
-                        { time: input }
+                        { time: normalizedTime }
                     );
 
                     if (updated) {
@@ -2523,7 +2634,7 @@ function displayFeedingHistory() {
 
                 deleteDryButton.addEventListener("click", () => {
                     const confirmed = confirm(
-                        `Permanently delete ${pet.name}'s dry feeding ${feeding.id} from ${record.date}?`
+                        `Permanently delete ${pet.name}'s dry feeding ${index + 1} from ${record.date}?`
                     );
 
                     if (!confirmed) return;
@@ -2635,9 +2746,9 @@ function displayFeedingHistory() {
 
                         if (input === null) return;
 
-                        const timePattern = /^([01]\d|2[0-3]):[0-5]\d$/;
+                        const normalizedTime = normalizeFeedingTime(input);
 
-                        if (!timePattern.test(input)) {
+                        if (normalizedTime === null) {
                             alert("Enter a valid time in HH:MM format, such as 18:30.");
                             return;
                         }
@@ -2647,7 +2758,7 @@ function displayFeedingHistory() {
                             pet.id,
                             "wet",
                             feeding.id,
-                            { time: input }
+                            { time: normalizedTime }
                         );
 
                         if (updated) {
