@@ -753,17 +753,19 @@ main {
     margin-top: 16px;
     border: 1px solid #ddd;
     border-radius: 8px;
+    background: #fff;
 }
 
 .history-card h3 {
-    margin-top: 0;
+    margin: 0 0 10px;
 }
 
 .history-card details {
-    margin-top: 12px;
-    padding: 12px;
+    margin-top: 10px;
+    padding: 10px 12px;
     background-color: #f7f7f7;
     border-radius: 6px;
+    background: #fafaf9;
 }
 
 .history-card summary {
@@ -934,6 +936,240 @@ main {
     flex-shrink: 0;
     margin: 0;
     padding: 0.2rem 0.5rem;
+}
+
+.duplicate-feeding-dialog {
+    width: min(420px, calc(100% - 32px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+    box-sizing: border-box;
+    padding: 28px;
+    border: none;
+    border-radius: 12px;
+    background: #fff;
+    color: #222;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.duplicate-feeding-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+.duplicate-feeding-dialog h3 {
+    margin: 0 0 12px;
+}
+
+.duplicate-feeding-dialog p {
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.duplicate-feeding-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.duplicate-feeding-actions button {
+    width: 100%;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+}
+
+.duplicate-feeding-actions .primary {
+    background: #303f35;
+    color: white;
+    border: 1px solid #303f35;
+}
+
+.duplicate-feeding-actions .secondary {
+    background: white;
+    color: #303f35;
+    border: 1px solid #303f35;
+}
+
+.duplicate-feeding-actions .cancel {
+    background: transparent;
+    color: #555;
+    border: none;
+}
+
+.duplicate-feeding-actions button:focus-visible {
+    outline: 3px solid #668a74;
+    outline-offset: 2px;
+}
+
+
+.historical-wet-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.historical-wet-form label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.historical-wet-form select,
+.historical-wet-form input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    font: inherit;
+}
+
+.historical-wet-form .duplicate-feeding-actions {
+    margin-top: 16px;
+}
+
+.historical-date-entry h3 {
+    width: 100%;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.historical-date-entry label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.historical-date-entry input,
+.historical-date-entry select {
+    width: auto;
+    min-width: 140px;
+    padding: 8px;
+    font: inherit;
+}
+
+.historical-date-entry button {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.historical-date-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.historical-date-controls label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.historical-date-controls input,
+.historical-date-controls select {
+    width: auto;
+    min-width: 140px;
+    padding: 8px;
+}
+
+.historical-date-controls button {
+    padding: 8px 12px;
+}
+
+.historical-date-entry,
+.feeding-history-filters {
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.history-filters {
+    margin-top: 10px;
+}
+
+.history-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 16px 0;
+}
+
+/* Hide default disclosure arrows */
+.feeding-history-filters summary,
+.historical-date-entry summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 6px 10px;
+    line-height: 20px;
+    box-sizing: border-box;
+    list-style: none;
+    cursor: pointer;
+}
+
+.feeding-history-filters summary::-webkit-details-marker,
+.historical-date-entry summary::-webkit-details-marker {
+    display: none;
+}
+
+.feeding-history-filters summary::marker,
+.historical-date-entry summary::marker {
+    content: "";
+}
+
+/* Filter icon */
+.feeding-history-filters summary::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background-color: currentColor;
+    clip-path: polygon(
+        0 0,
+        100% 0,
+        62% 45%,
+        62% 85%,
+        38% 100%,
+        38% 45%
+    );
+}
+
+/* Filter collapsed */
+.feeding-history-filters summary {
+    color: #444;
+    background-color: transparent;
+    border-radius: 6px;
+    padding: 6px 10px;
+    transition: background-color 0.1s ease;
+    margin-bottom: 0;
+}
+
+/* Filter expanded */
+.feeding-history-filters[open] summary {
+    color: #222;
+    background-color: #e8e8e8;
+}
+
+/* Subtle hover state */
+.feeding-history-filters summary:hover {
+    color: #888;
+}
+
+/* Plus icon */
+.historical-date-entry summary::before {
+    content: "+";
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 16px;
+}
+
+/* Change plus to minus when expanded */
+.historical-date-entry[open] summary::before {
+    content: "−";
 }
 
 @media (max-width: 600px) {
