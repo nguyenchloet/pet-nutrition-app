@@ -95,7 +95,6 @@ function savePets() {
 
 let pets = loadPets();
 
-
 const weightForm = document.getElementById("weightForm");
 const weightPetSelect = document.getElementById("weightPet");
 const weightDateInput = document.getElementById("weightDate");
@@ -1929,10 +1928,9 @@ let editingPetId = null;
 
 addPetButton.addEventListener("click", () => {
     editingPetId = null;
-
     petForm.reset();
-    petForm.hidden = false;
     document.getElementById("pet-form-title").textContent = "Add Pet";
+    petForm.hidden = false;
 });
 
 cancelPetButton.addEventListener("click", () => {
@@ -1946,6 +1944,10 @@ petForm.addEventListener("submit", event => {
 
     const name = document.getElementById("pet-name").value.trim();
     const species = document.getElementById("pet-species").value;
+    const appearance = {
+        avatar: document.getElementById("pet-avatar").value,
+        color: document.getElementById("pet-color").value
+    };
 
     if (!name) {
         alert("Please enter a pet name.");
@@ -1963,13 +1965,15 @@ petForm.addEventListener("submit", event => {
 
         pet.name = name;
         pet.species = species;
+        pet.appearance = appearance;
     } else {
         const newPet = {
                 id: crypto.randomUUID(),
                 name,
                 species,
                 birthdate: "",
-                dailyCalories: 0
+                dailyCalories: 0,
+                appearance
             };
 
             pets.push(newPet);
@@ -2022,12 +2026,116 @@ function removePet(petId) {
     refreshPetViews();
 }
 
+function getPetAppearance(pet) {
+    return {
+        avatar: pet.appearance?.avatar ?? "default",
+        color: pet.appearance?.color ?? "#dce8df"
+    };
+}
+
+function getContrastColor(hexColor) {
+    const rgb = hexColor.replace("#", "").match(/.{2}/g).map(value => {
+        const channel = parseInt(value, 16) / 255;
+
+        return channel <= 0.04045
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+
+    const luminance =
+        0.2126 * rgb[0] +
+        0.7152 * rgb[1] +
+        0.0722 * rgb[2];
+
+    return luminance > 0.179 ? "#222222" : "#ffffff";
+}
+
+function createPetAvatar(pet) {
+    const appearance = getPetAppearance(pet);
+
+    const avatar = document.createElement("span");
+    avatar.className = "pet-avatar";
+    avatar.style.backgroundColor = appearance.color;
+    avatar.style.color = getContrastColor(appearance.color);
+
+    const selectedAvatar =
+        appearance.avatar === "default"
+            ? pet.species
+            : appearance.avatar;
+
+    if (selectedAvatar === "initial") {
+        avatar.textContent = pet.name.charAt(0).toUpperCase();
+        return avatar;
+    }
+
+    const iconPaths = {
+        cat: `
+            <path d="
+                    M4 9
+                    L3.5 4
+                    L8.5 7
+                    Q12 6 15.5 7
+                    L20.5 4
+                    L20 9
+                    C21 13 20 17 17 19
+                    Q12 22 7 19
+                    C4 17 3 13 4 9
+                    Z
+                "/>
+                <path d="M8.5 13h.01M15.5 13h.01"/>
+                <path d="m11 16 1 1 1-1"/>
+        `,
+        dog: `
+            <path d="M8 6 4 4 2 10l3 3"/>
+            <path d="m16 6 4-2 2 6-3 3"/>
+            <path d="M5 11a7 7 0 0 1 14 0v4a7 7 0 0 1-14 0v-4Z"/>
+            <path d="M9 13h.01M15 13h.01"/>
+            <path d="m11 17 1 1 1-1"/>
+        `,
+        paw: `
+            <ellipse cx="12" cy="16.5" rx="4.5" ry="3.5"/>
+            <ellipse cx="5.5" cy="11" rx="1.5" ry="2"/>
+            <ellipse cx="9.5" cy="7.5" rx="1.5" ry="2"/>
+            <ellipse cx="14.5" cy="7.5" rx="1.5" ry="2"/>
+            <ellipse cx="18.5" cy="11" rx="1.5" ry="2"/>
+        `
+    };
+
+    const svg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+    );
+
+    svg.setAttribute("viewBox", "0 0 24 24");
+
+    if (selectedAvatar === "cat") {
+        svg.style.transform = "translateY(1px)";
+    }
+
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.7");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.innerHTML = iconPaths[selectedAvatar] ?? iconPaths.paw;
+
+    avatar.appendChild(svg);
+
+    return avatar;
+}
+
 function displayPetList() {
     petList.replaceChildren();
 
     pets.forEach(pet => {
         const row = document.createElement("div");
         row.className = "pet-settings-row";
+
+        const appearance = getPetAppearance(pet);
+
+        const avatar = createPetAvatar(pet);
 
         const name = document.createElement("span");
         name.textContent = `${pet.name} (${pet.species})`;
@@ -2040,6 +2148,12 @@ function displayPetList() {
             editingPetId = pet.id;
             document.getElementById("pet-name").value = pet.name;
             document.getElementById("pet-species").value = pet.species;
+
+            const appearance = getPetAppearance(pet);
+
+            document.getElementById("pet-avatar").value = appearance.avatar;
+            document.getElementById("pet-color").value = appearance.color;
+
             document.getElementById("pet-form-title").textContent = `Edit ${pet.name}`;
             petForm.hidden = false;
         });
@@ -2054,7 +2168,7 @@ function displayPetList() {
             removePet(pet.id);
         });
 
-        row.append(name, editButton, removeButton);
+        row.append(avatar, name, editButton, removeButton);
         petList.appendChild(row);
     });
 }

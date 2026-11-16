@@ -1172,6 +1172,67 @@ main {
     content: "−";
 }
 
+.pet-appearance-settings {
+    display: grid;
+    gap: 8px;
+    margin: 16px 0;
+    padding: 16px;
+    border: 1px solid #e7e7e5;
+    border-radius: 10px;
+}
+
+.pet-appearance-settings legend {
+    padding: 0 6px;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.pet-appearance-settings select {
+    min-height: 40px;
+    padding: 8px;
+    border: 1px solid #d5ded6;
+    border-radius: 8px;
+}
+
+.pet-appearance-settings input[type="color"] {
+    width: 56px;
+    height: 40px;
+    padding: 3px;
+    border: 1px solid #d5ded6;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.pet-settings-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.pet-settings-row button:first-of-type {
+    margin-left: auto;
+}
+
+.pet-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    color: #34483b;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.pet-avatar svg {
+    display: block;
+    width: 24px;
+    height: 24px;
+}
+
 @media (max-width: 600px) {
     .weight-history-table th,
     .weight-history-table td {
