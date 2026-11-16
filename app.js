@@ -2014,6 +2014,12 @@ petForm.addEventListener("submit", async event => {
 
     const name = document.getElementById("pet-name").value.trim();
     const species = document.getElementById("pet-species").value;
+    const birthdate = document.getElementById("pet-birthdate").value;
+    const sex = document.getElementById("pet-sex").value;
+    const sterilizationStatus = document.getElementById("pet-sterilization").value;
+    const breed = document.getElementById("pet-breed").value.trim();
+    const coloring = document.getElementById("pet-coloring").value.trim();
+
     const appearance = {
         avatar: document.getElementById("pet-avatar").value,
         color: document.getElementById("pet-color").value
@@ -2063,13 +2069,23 @@ petForm.addEventListener("submit", async event => {
 
         pet.name = name;
         pet.species = species;
+        pet.birthdate = birthdate;
+        pet.sex = sex;
+        pet.sterilizationStatus = sterilizationStatus;
+        pet.breed = breed;
+        pet.coloring = coloring;
         pet.appearance = appearance;
+
     } else {
         newPet = {
             id: crypto.randomUUID(),
             name,
             species,
-            birthdate: "",
+            birthdate,
+            sex,
+            sterilizationStatus,
+            breed,
+            coloring,
             dailyCalories: 0,
             appearance
         };
@@ -2277,6 +2293,11 @@ function displayPetList() {
             editingPetId = pet.id;
             document.getElementById("pet-name").value = pet.name;
             document.getElementById("pet-species").value = pet.species;
+            document.getElementById("pet-birthdate").value = pet.birthdate ?? "";
+            document.getElementById("pet-sex").value = pet.sex ?? "";
+            document.getElementById("pet-sterilization").value = pet.sterilizationStatus ?? "unknown";
+            document.getElementById("pet-breed").value = pet.breed ?? "";
+            document.getElementById("pet-coloring").value = pet.coloring ?? "";
 
             const appearance = getPetAppearance(pet);
 

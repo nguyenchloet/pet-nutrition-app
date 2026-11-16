@@ -207,6 +207,42 @@
                             <option value="dog">Dog</option>
                         </select>
 
+                        <fieldset class="pet-profile-settings">
+                            <legend>Basic Information</legend>
+
+                            <label for="pet-birthdate">Date of Birth</label>
+                            <input type="date" id="pet-birthdate">
+
+                            <label for="pet-sex">Sex</label>
+                            <select id="pet-sex">
+                                <option value="">Not specified</option>
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+
+                            <label for="pet-sterilization">Spay/Neuter Status</label>
+                            <select id="pet-sterilization">
+                                <option value="unknown">Unknown</option>
+                                <option value="intact">Not spayed/neutered</option>
+                                <option value="sterilized">Spayed/Neutered</option>
+                            </select>
+
+                            <label for="pet-breed">Breed</label>
+                            <input
+                                type="text"
+                                id="pet-breed"
+                                placeholder="e.g., Domestic Shorthair"
+                            >
+
+                            <label for="pet-coloring">Coat Color / Markings</label>
+                            <input
+                                type="text"
+                                id="pet-coloring"
+                                placeholder="e.g., Gray tabby with white paws"
+                            >
+                        </fieldset>
+
                         <fieldset class="pet-appearance-settings">
                             <legend>Appearance</legend>
 
