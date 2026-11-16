@@ -194,86 +194,112 @@
                   
                     <form id="pet-form" hidden>
                         <h4 id="pet-form-title">Add Pet</h4>
-                        <label for="pet-name">Name</label>
-                        <input
-                            type="text"
-                            id="pet-name"
-                            required
-                        >
+                        
+                        <details class="pet-profile-section" open>
+                            <summary>Basic Information</summary>
 
-                        <label for="pet-species">Species</label>
-                        <select id="pet-species">
-                            <option value="cat">Cat</option>
-                            <option value="dog">Dog</option>
-                        </select>
+                            <div class="pet-form-grid">
+                                <div class="pet-form-field">
+                                    <label for="pet-name">Name</label>
+                                    <input
+                                        type="text"
+                                        id="pet-name"
+                                        required
+                                    >
+                                </div>
+                                <div class="pet-form-field">
+                                    <label for="pet-species">Species</label>
+                                    <select id="pet-species">
+                                        <option value="cat">Cat</option>
+                                        <option value="dog">Dog</option>
+                                    </select>
+                                </div>
 
-                        <fieldset class="pet-profile-settings">
-                            <legend>Basic Information</legend>
+                                <div class="pet-form-field">
+                                    <label for="pet-birthdate">Date of Birth</label>
+                                    <input type="date" id="pet-birthdate">
+                                </div>
 
-                            <label for="pet-birthdate">Date of Birth</label>
-                            <input type="date" id="pet-birthdate">
+                                <div class="pet-form-field">
+                                    <label for="pet-sex">Sex</label>
+                                    <select id="pet-sex">
+                                        <option value="">Not specified</option>
+                                        <option value="female">Female</option>
+                                        <option value="male">Male</option>
+                                        <option value="unknown">Unknown</option>
+                                    </select>
+                                </div>
 
-                            <label for="pet-sex">Sex</label>
-                            <select id="pet-sex">
-                                <option value="">Not specified</option>
-                                <option value="female">Female</option>
-                                <option value="male">Male</option>
-                                <option value="unknown">Unknown</option>
-                            </select>
+                                <div class="pet-form-field">
+                                    <label for="pet-sterilization">Spay/Neuter Status</label>
+                                    <select id="pet-sterilization">
+                                        <option value="unknown">Unknown</option>
+                                        <option value="intact">Not spayed/neutered</option>
+                                        <option value="sterilized">Spayed/Neutered</option>
+                                    </select>
+                                </div>
 
-                            <label for="pet-sterilization">Spay/Neuter Status</label>
-                            <select id="pet-sterilization">
-                                <option value="unknown">Unknown</option>
-                                <option value="intact">Not spayed/neutered</option>
-                                <option value="sterilized">Spayed/Neutered</option>
-                            </select>
+                                <div class="pet-form-field">
+                                    <label for="pet-breed">Breed</label>
+                                    <input
+                                        type="text"
+                                        id="pet-breed"
+                                        placeholder="e.g., Domestic Shorthair"
+                                    >
+                                </div>
 
-                            <label for="pet-breed">Breed</label>
-                            <input
-                                type="text"
-                                id="pet-breed"
-                                placeholder="e.g., Domestic Shorthair"
-                            >
-
-                            <label for="pet-coloring">Coat Color / Markings</label>
-                            <input
-                                type="text"
-                                id="pet-coloring"
-                                placeholder="e.g., Gray tabby with white paws"
-                            >
-                        </fieldset>
-
-                        <fieldset class="pet-appearance-settings">
-                            <legend>Appearance</legend>
-
-                            <label for="pet-avatar">Avatar</label>
-                            <select id="pet-avatar">
-                                <option value="photo">Photo</option>
-                                <option value="default">Default</option>
-                                <option value="cat">Cat</option>
-                                <option value="dog">Dog</option>
-                                <option value="paw">Paw Print</option>
-                                <option value="initial">Name Initial</option>
-                            </select>
-                            <div id="pet-photo-field" hidden>
-                                <label for="pet-photo">Pet photo</label>
-                                <input
-                                    type="file"
-                                    id="pet-photo"
-                                    accept="image/png,image/jpeg,image/webp"
-                                >
-                                <small>Choose a JPG, PNG, or WebP image.</small>
+                                <div class="pet-form-field">
+                                    <label for="pet-coloring">Coat Color / Markings</label>
+                                    <input
+                                        type="text"
+                                        id="pet-coloring"
+                                        placeholder="e.g., Gray tabby with white paws"
+                                    >
+                                </div>
                             </div>
-                            <label for="pet-color">Avatar Color</label>
-                            <input
-                                type="color"
-                                id="pet-color"
-                                value="#dce8df"
-                            >
-                        </fieldset>
+                        </details>
 
-                        <button type="submit">Save Pet</button>
-                        <button type="button" id="cancel-pet-button">Cancel</button>
+                        <details class="pet-profile-section">
+                            <summary>Profile Settings</summary>
+                            <div class="pet-form-grid">
+                                <div class="pet-form-field">
+                                    <label for="pet-avatar">Avatar</label>
+                                    <select id="pet-avatar">
+                                        <option value="default">Default</option>
+                                        <option value="photo">Photo</option>
+                                        <option value="cat">Cat</option>
+                                        <option value="dog">Dog</option>
+                                        <option value="paw">Paw Print</option>
+                                        <option value="initial">Name Initial</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="pet-form-field">
+                                    <div id="pet-photo-field" hidden>
+                                        <label for="pet-photo">Pet photo</label>
+                                        <input
+                                            type="file"
+                                            id="pet-photo"
+                                            accept="image/png,image/jpeg,image/webp"
+                                        >
+                                        <small>Choose a JPG, PNG, or WebP image.</small>
+                                    </div>
+                                    
+                                    <div class="pet-form-field">
+                                        <label for="pet-color">Avatar Color</label>
+                                        <input
+                                            type="color"
+                                            id="pet-color"
+                                            value="#dce8df"
+                                        >
+                                    </div>
+                                </div>
+                        </details>
+
+                        <div class="pet-form-actions">
+                            <button type="submit">Save Pet</button>
+                            <button type="button" id="cancel-pet-button">Cancel</button>
+                        </div>
                     </form>
                 </div>
             </section>
