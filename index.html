@@ -212,13 +212,22 @@
 
                             <label for="pet-avatar">Avatar</label>
                             <select id="pet-avatar">
+                                <option value="photo">Photo</option>
                                 <option value="default">Default</option>
                                 <option value="cat">Cat</option>
                                 <option value="dog">Dog</option>
                                 <option value="paw">Paw Print</option>
                                 <option value="initial">Name Initial</option>
                             </select>
-
+                            <div id="pet-photo-field" hidden>
+                                <label for="pet-photo">Pet photo</label>
+                                <input
+                                    type="file"
+                                    id="pet-photo"
+                                    accept="image/png,image/jpeg,image/webp"
+                                >
+                                <small>Choose a JPG, PNG, or WebP image.</small>
+                            </div>
                             <label for="pet-color">Avatar Color</label>
                             <input
                                 type="color"

@@ -1926,9 +1926,71 @@ const cancelPetButton = document.getElementById("cancel-pet-button");
 
 let editingPetId = null;
 
+const petAvatarSelect = document.getElementById("pet-avatar");
+const petPhotoField = document.getElementById("pet-photo-field");
+const petPhotoInput = document.getElementById("pet-photo");
+
+function updatePetPhotoField() {
+    petPhotoField.hidden = petAvatarSelect.value !== "photo";
+}
+
+petAvatarSelect.addEventListener("change", updatePetPhotoField);
+
+function resizePetPhoto(file) {
+    return new Promise((resolve, reject) => {
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            reject(new Error("Choose a JPG, PNG, or WebP image."));
+            return;
+        }
+
+        const image = new Image();
+        const url = URL.createObjectURL(file);
+
+        image.onload = () => {
+            URL.revokeObjectURL(url);
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 160;
+            canvas.height = 160;
+
+            const context = canvas.getContext("2d");
+
+            if (!context) {
+                reject(new Error("Unable to process image."));
+                return;
+            }
+
+            const size = Math.min(image.width, image.height);
+
+            context.drawImage(
+                image,
+                (image.width - size) / 2,
+                (image.height - size) / 2,
+                size,
+                size,
+                0,
+                0,
+                160,
+                160
+            );
+
+            resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+
+        image.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("Unable to read photo."));
+        };
+
+        image.src = url;
+    });
+}
+
 addPetButton.addEventListener("click", () => {
     editingPetId = null;
     petForm.reset();
+    petPhotoInput.value = "";
+    updatePetPhotoField();
     document.getElementById("pet-form-title").textContent = "Add Pet";
     petForm.hidden = false;
 });
@@ -1936,10 +1998,12 @@ addPetButton.addEventListener("click", () => {
 cancelPetButton.addEventListener("click", () => {
     editingPetId = null; 
     petForm.reset();
+    petPhotoInput.value = "";
+    updatePetPhotoField();
     petForm.hidden = true;
 });
 
-petForm.addEventListener("submit", event => {
+petForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     const name = document.getElementById("pet-name").value.trim();
@@ -1949,17 +2013,45 @@ petForm.addEventListener("submit", event => {
         color: document.getElementById("pet-color").value
     };
 
+    const existingPet = pets.find(pet => pet.id === editingPetId);
+
+    // Preserve any previously uploaded photo
+    appearance.photo = existingPet?.appearance?.photo ?? null;
+
+    if (appearance.avatar === "photo") {
+        if (petPhotoInput.files.length > 0) {
+            try {
+                appearance.photo = await resizePetPhoto(petPhotoInput.files[0]);
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+        }
+
+        if (!appearance.photo) {
+            alert("Please choose a photo for this pet.");
+            return;
+        }
+    }
+
     if (!name) {
         alert("Please enter a pet name.");
         return;
     }
 
+    // Prepare the updated pet list without modifying the original
+    const updatedPets = pets.map(pet => ({
+        ...pet,
+        appearance: pet.appearance ? { ...pet.appearance } : undefined
+    }));
+
+    let newPet = null;
+
     if (editingPetId !== null) {
-        // Update existing pet without changing its ID
-        const pet = pets.find(pet => pet.id === editingPetId);
+        const pet = updatedPets.find(pet => pet.id === editingPetId);
 
         if (!pet) {
-            alert("Pet not found");
+            alert("Pet not found.");
             return;
         }
 
@@ -1967,23 +2059,42 @@ petForm.addEventListener("submit", event => {
         pet.species = species;
         pet.appearance = appearance;
     } else {
-        const newPet = {
-                id: crypto.randomUUID(),
-                name,
-                species,
-                birthdate: "",
-                dailyCalories: 0,
-                appearance
-            };
+        newPet = {
+            id: crypto.randomUUID(),
+            name,
+            species,
+            birthdate: "",
+            dailyCalories: 0,
+            appearance
+        };
 
-            pets.push(newPet);
-            wetFeedings[newPet.id] = [];
+        updatedPets.push(newPet);
     }
-    
-    savePets();
+
+    // Save to browser storage before changing application state
+    try {
+        localStorage.setItem(
+            PETS_STORAGE_KEY,
+            JSON.stringify(updatedPets)
+        ); 
+        // throw new Error("Simulated storage failure.");
+    } catch (error) {
+        console.error("Unable to save pet profile:", error);
+        alert("Unable to save pet profile. Browser storage may be full.");
+        return;
+    }
+
+    // Only update application state after storage succeeds
+    pets = updatedPets;
+
+    if (newPet) {
+        wetFeedings[newPet.id] = [];
+    }
 
     editingPetId = null;
     petForm.reset();
+    petPhotoInput.value = "";
+    updatePetPhotoField();
     petForm.hidden = true;
 
     displayPetList();
@@ -2029,7 +2140,8 @@ function removePet(petId) {
 function getPetAppearance(pet) {
     return {
         avatar: pet.appearance?.avatar ?? "default",
-        color: pet.appearance?.color ?? "#dce8df"
+        color: pet.appearance?.color ?? "#dce8df",
+        photo: pet.appearance?.photo ?? null
     };
 }
 
@@ -2056,6 +2168,17 @@ function createPetAvatar(pet) {
     const avatar = document.createElement("span");
     avatar.className = "pet-avatar";
     avatar.style.backgroundColor = appearance.color;
+   
+    if (appearance.avatar === "photo" && appearance.photo) {
+        const image = document.createElement("img");
+        image.src = appearance.photo;
+        image.alt = `${pet.name}'s photo`;
+        image.className = "pet-avatar-photo";
+
+        avatar.appendChild(image);
+        return avatar;
+    }
+
     avatar.style.color = getContrastColor(appearance.color);
 
     const selectedAvatar =
@@ -2153,6 +2276,9 @@ function displayPetList() {
 
             document.getElementById("pet-avatar").value = appearance.avatar;
             document.getElementById("pet-color").value = appearance.color;
+
+            petPhotoInput.value = "";
+            updatePetPhotoField();
 
             document.getElementById("pet-form-title").textContent = `Edit ${pet.name}`;
             petForm.hidden = false;

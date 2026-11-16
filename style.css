@@ -1215,6 +1215,7 @@ main {
 }
 
 .pet-avatar {
+    overflow: hidden;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1231,6 +1232,13 @@ main {
     display: block;
     width: 24px;
     height: 24px;
+}
+
+.pet-avatar-photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 @media (max-width: 600px) {
