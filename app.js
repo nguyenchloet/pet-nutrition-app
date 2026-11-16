@@ -1441,7 +1441,7 @@ function displayDryFoodCalculator() {
         }
 
         section.prepend(heading);
-        section.append(result);
+        heading.after(result);
         dryFoodContainer.appendChild(section);
 
         const wetFoodSection = document.createElement("div");
@@ -2261,7 +2261,7 @@ function displayPetList() {
         const avatar = createPetAvatar(pet);
 
         const name = document.createElement("span");
-        name.textContent = `${pet.name} (${pet.species})`;
+        name.textContent = `${pet.name}`;
 
         const editButton = document.createElement("button");
         editButton.type = "button";
