@@ -2192,6 +2192,37 @@ function normalizeFeedingTime(input) {
     return `${hours.padStart(2, "0")}:${minutes}`;
 }
 
+function recalculateHistoricalCalories(savedPet) {
+    const caloriesPerGram =
+        savedPet.dryFoodCaloriesPerGram ?? dryFoodCaloriesPerGram;
+
+    const dryFeedings = savedPet.dryFeedings || [];
+
+    const dryCalories = dryFeedings.reduce((total, feeding) => {
+        if (!feeding.completed) return total;
+
+        return total + Number(feeding.grams) * caloriesPerGram;
+    }, 0);
+
+    let wetCalories = 0;
+
+    if (Array.isArray(savedPet.wetFeedings)) {
+        wetCalories = savedPet.wetFeedings.reduce((total, feeding) => {
+            if (!feeding.completed) return total;
+
+            return total + Number(feeding.calories);
+        }, 0);
+    } else if (
+        savedPet.wetFoodCompleted ?? savedPet.wetFoodEaten ?? false
+    ) {
+        wetCalories = Number(savedPet.wetFood?.calories ?? 0);
+    }
+
+    savedPet.dryCalories = dryCalories;
+    savedPet.totalCaloriesConsumed = dryCalories + wetCalories;
+
+    return savedPet.totalCaloriesConsumed;
+}
 
 function showDuplicateFeedingDialog(petName, time, existingGrams, newGrams) {
     return new Promise(resolve => {
@@ -2428,33 +2459,13 @@ function addHistoricalDryFeeding(date, petId, grams, time, duplicateAction = "ne
     }
 
     /* Recalculate calories using this pet's saved food density */
-    savedPet.dryCalories = savedPet.dryFeedings.reduce(
-        (total, feeding) =>
-            total + (
-                feeding.completed
-                ? feeding.grams * caloriesPerGram
-                : 0
-            ),
-        0
+    recalculateHistoricalCalories(savedPet);
+
+    localStorage.setItem(
+        "feedingHistory",
+        JSON.stringify(history)
     );
-
-    const wetCalories = Array.isArray(savedPet.wetFeedings) 
-        ? savedPet.wetFeedings.reduce(
-            (total, feeding) =>
-                total + (feeding.completed ? feeding.calories : 0),
-            0
-        )
-        : (savedPet.wetFoodCompleted ?? savedPet.wetFoodEaten ?? false)
-            ? (savedPet.wetFood?.calories ?? 0)
-            : 0;
-        
-        savedPet.totalCaloriesConsumed = savedPet.dryCalories + wetCalories;
-
-        localStorage.setItem(
-            "feedingHistory",
-            JSON.stringify(history)
-        );
-        return true;
+    return true;
 }
 
 
@@ -2539,23 +2550,7 @@ function addHistoricalWetFeeding(date, petId, feeding, action = "new") {
         return false;
     }
 
-    const dryCalories = (savedPet.dryFeedings || []).reduce(
-        (total, item) =>
-            total + (item.completed
-                ? Number(item.grams) *
-                    (savedPet.dryFoodCaloriesPerGram ?? dryFoodCaloriesPerGram)
-                : 0),
-        0
-    );
-
-    const wetCalories = savedPet.wetFeedings.reduce(
-        (total, item) =>
-            total + (item.completed ? Number(item.calories) : 0),
-        0
-    );
-
-    savedPet.dryCalories = dryCalories;
-    savedPet.totalCaloriesConsumed = dryCalories + wetCalories;
+    recalculateHistoricalCalories(savedPet);
 
     localStorage.setItem("feedingHistory", JSON.stringify(history));
     return true;
@@ -2605,27 +2600,18 @@ function updateFeedingHistoryRecord(date, petId, feedingType, feedingId, changes
     }
     
     if (feedingType === "wet" && "grams" in changes) {
+        const petForCalculation =
+            pets.find(pet => pet.id === petId) || savedPet;
+
         feeding.calories = calculateWetServingCalories(
-            pets.find(pet => pet.id === petId),
+            petForCalculation,
             feeding.type,
             feeding.flavor,
             feeding.grams
         );
     }
 
-    savedPet.dryCalories = calculateDryFoodCalories(savedPet.dryFeedings);
-
-    const wetCalories = Array.isArray(savedPet.wetFeedings)
-    ? savedPet.wetFeedings.reduce(
-        (total, item) =>
-            total + (item.completed ? item.calories : 0),
-        0
-    )
-    : (savedPet.wetFoodCompleted ?? savedPet.wetFoodEaten ?? false)
-        ? (savedPet.wetFood?.calories ?? 0)
-        : 0;
-
-    savedPet.totalCaloriesConsumed = savedPet.dryCalories + wetCalories;
+    recalculateHistoricalCalories(savedPet);
 
     localStorage.setItem("feedingHistory", JSON.stringify(history));
 
@@ -2660,9 +2646,7 @@ function deleteFeedingHistoryRecord(date, petId, feedingType, feedingId) {
 
     feedings.splice(feedingIndex, 1);
 
-    savedPet.dryCalories = calculateDryFoodCalories(
-        savedPet.dryFeedings || []
-    );
+    recalculateHistoricalCalories(savedPet);
 
     const wetCalories = Array.isArray(savedPet.wetFeedings)
         ? savedPet.wetFeedings.reduce(
