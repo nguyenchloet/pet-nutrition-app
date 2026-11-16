@@ -753,17 +753,19 @@ main {
     margin-top: 16px;
     border: 1px solid #ddd;
     border-radius: 8px;
+    background: #fff;
 }
 
 .history-card h3 {
-    margin-top: 0;
+    margin: 0 0 10px;
 }
 
 .history-card details {
-    margin-top: 12px;
-    padding: 12px;
+    margin-top: 10px;
+    padding: 10px 12px;
     background-color: #f7f7f7;
     border-radius: 6px;
+    background: #fafaf9;
 }
 
 .history-card summary {
@@ -1023,6 +1025,151 @@ main {
 
 .historical-wet-form .duplicate-feeding-actions {
     margin-top: 16px;
+}
+
+.historical-date-entry h3 {
+    width: 100%;
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.historical-date-entry label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.historical-date-entry input,
+.historical-date-entry select {
+    width: auto;
+    min-width: 140px;
+    padding: 8px;
+    font: inherit;
+}
+
+.historical-date-entry button {
+    padding: 8px 12px;
+    cursor: pointer;
+}
+
+.historical-date-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.historical-date-controls label {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.historical-date-controls input,
+.historical-date-controls select {
+    width: auto;
+    min-width: 140px;
+    padding: 8px;
+}
+
+.historical-date-controls button {
+    padding: 8px 12px;
+}
+
+.historical-date-entry,
+.feeding-history-filters {
+    margin: 0;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+}
+
+.history-filters {
+    margin-top: 10px;
+}
+
+.history-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 16px 0;
+}
+
+/* Hide default disclosure arrows */
+.feeding-history-filters summary,
+.historical-date-entry summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 6px 10px;
+    line-height: 20px;
+    box-sizing: border-box;
+    list-style: none;
+    cursor: pointer;
+}
+
+.feeding-history-filters summary::-webkit-details-marker,
+.historical-date-entry summary::-webkit-details-marker {
+    display: none;
+}
+
+.feeding-history-filters summary::marker,
+.historical-date-entry summary::marker {
+    content: "";
+}
+
+/* Filter icon */
+.feeding-history-filters summary::before {
+    content: "";
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    background-color: currentColor;
+    clip-path: polygon(
+        0 0,
+        100% 0,
+        62% 45%,
+        62% 85%,
+        38% 100%,
+        38% 45%
+    );
+}
+
+/* Filter collapsed */
+.feeding-history-filters summary {
+    color: #444;
+    background-color: transparent;
+    border-radius: 6px;
+    padding: 6px 10px;
+    transition: background-color 0.1s ease;
+    margin-bottom: 0;
+}
+
+/* Filter expanded */
+.feeding-history-filters[open] summary {
+    color: #222;
+    background-color: #e8e8e8;
+}
+
+/* Subtle hover state */
+.feeding-history-filters summary:hover {
+    color: #888;
+}
+
+/* Plus icon */
+.historical-date-entry summary::before {
+    content: "+";
+    font-size: 22px;
+    font-weight: 400;
+    line-height: 16px;
+}
+
+/* Change plus to minus when expanded */
+.historical-date-entry[open] summary::before {
+    content: "−";
 }
 
 @media (max-width: 600px) {

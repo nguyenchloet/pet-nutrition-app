@@ -2067,6 +2067,7 @@ function refreshPetViews() {
     displayWeightChart();
     displayWeighInReminders();
     displayFeedingHistory();
+    refreshHistoricalPetOptions?.();
 }
 
 function updatePetSelectOptions() {
@@ -2222,6 +2223,138 @@ function recalculateHistoricalCalories(savedPet) {
     savedPet.totalCaloriesConsumed = dryCalories + wetCalories;
 
     return savedPet.totalCaloriesConsumed;
+}
+
+function createHistoricalDayRecord(history, date, pet) {
+    let dayRecord = history.find(record => record.date === date);
+
+    if (!dayRecord) {
+        dayRecord = {
+            date,
+            sharedWetFoodType: "homemade",
+            sharedWetFoodFlavor: "chicken",
+            pets: []
+        };
+
+        history.push(dayRecord);
+    }
+
+    // Older records may use "cats" instead of "pets".
+    if (!Array.isArray(dayRecord.pets)) {
+        dayRecord.pets = dayRecord.cats || [];
+        delete dayRecord.cats;
+    }
+
+    let savedPet = dayRecord.pets.find(
+        item => item.id === pet.id
+    );
+
+    if (!savedPet) {
+        savedPet = {
+            id: pet.id,
+            name: pet.name,
+            species: pet.species,
+            dailyCalories: pet.dailyCalories,
+            dryFoodProduct: "Blue Buffalo Wilderness Indoor Chicken",
+            dryFoodCaloriesPerGram,
+            dryFeedings: [],
+            dryCalories: 0,
+            wetFeedings: [],
+            usesSharedWetFood: true,
+            wetFoodType: "homemade",
+            wetFoodFlavor: "chicken",
+            wetFood: null,
+            wetFoodCompleted: false,
+            totalCaloriesConsumed: 0
+        };
+
+        dayRecord.pets.push(savedPet);
+    }
+
+    return { dayRecord, savedPet };
+}
+
+function saveFeedingToHistoricalDate(date, petId, feedingType, feeding) {
+    const today = new Date().toLocaleDateString("en-CA");
+    const parsedDate = new Date(`${date}T12:00:00`);
+
+    if (
+        !/^\d{4}-\d{2}-\d{2}$/.test(date) ||
+        Number.isNaN(parsedDate.getTime()) ||
+        parsedDate.toLocaleDateString("en-CA") !== date ||
+        date >= today
+    ) {
+        return false;
+    }
+
+    const pet = pets.find(item => item.id === petId);
+    if (!pet) return false;
+
+    const grams = Number(feeding.grams);
+    const time = normalizeFeedingTime(feeding.time);
+
+    if (!Number.isFinite(grams) || grams <= 0 || !time) {
+        return false;
+    }
+
+    let calories;
+
+    if (feedingType === "wet") {
+        calories = calculateWetServingCalories(
+            pet,
+            feeding.type,
+            feeding.flavor,
+            grams
+        );
+
+        if (!Number.isFinite(calories) || calories <= 0) {
+            return false;
+        }
+    } else if (feedingType === "dry") {
+        calories = grams * dryFoodCaloriesPerGram;
+    } else {
+        return false;
+    }
+
+    const history = JSON.parse(
+        localStorage.getItem("feedingHistory") || "[]"
+    );
+
+    const { savedPet } = createHistoricalDayRecord(
+        history,
+        date,
+        pet
+    );
+
+    if (feedingType === "dry") {
+        savedPet.dryFeedings.push({
+            id: crypto.randomUUID(),
+            grams,
+            time,
+            calories,
+            completed: true,
+            method: "manual"
+        });
+    } else {
+        savedPet.wetFeedings.push({
+            id: crypto.randomUUID(),
+            type: feeding.type,
+            flavor: feeding.flavor,
+            grams,
+            time,
+            calories,
+            completed: true
+        });
+    }
+
+    recalculateHistoricalCalories(savedPet);
+
+    localStorage.setItem(
+        "feedingHistory",
+        JSON.stringify(history)
+    );
+
+    return true;
 }
 
 function showDuplicateFeedingDialog(petName, time, existingGrams, newGrams) {
@@ -2647,19 +2780,6 @@ function deleteFeedingHistoryRecord(date, petId, feedingType, feedingId) {
     feedings.splice(feedingIndex, 1);
 
     recalculateHistoricalCalories(savedPet);
-
-    const wetCalories = Array.isArray(savedPet.wetFeedings)
-        ? savedPet.wetFeedings.reduce(
-            (total, feeding) =>
-                total + (feeding.completed ? feeding.calories : 0),
-            0
-        )
-        : (savedPet.wetFoodCompleted ?? savedPet.wetFoodEaten ?? false)
-            ? (savedPet.wetFood?.calories ?? 0)
-            : 0;
-
-    savedPet.totalCaloriesConsumed =
-        savedPet.dryCalories + wetCalories;
 
     localStorage.setItem(
         "feedingHistory",
@@ -3274,6 +3394,182 @@ function displayFeedingHistory() {
     });
 }
 
+
+function initializeHistoricalDateEntry() {
+    const container = document.getElementById("feedingHistory");
+    if (!container) return;
+
+    const section = document.createElement("details");
+    section.className = "historical-date-entry";
+
+    const summary = document.createElement("summary");
+    summary.textContent = "Add a Missed Feeding";
+
+    section.appendChild(summary);
+
+    const controls = document.createElement("div");
+    controls.className = "historical-date-controls";
+
+    const dateLabel = document.createElement("label");
+    dateLabel.textContent = "Feeding date";
+
+    const dateInput = document.createElement("input");
+    dateInput.type = "date";
+    dateInput.required = true;
+
+    const today = new Date();
+    today.setDate(today.getDate() - 1);
+    dateInput.max = today.toLocaleDateString("en-CA");
+    dateInput.value = dateInput.max;
+
+    const petLabel = document.createElement("label");
+    petLabel.textContent = "Pet";
+
+    const petSelect = document.createElement("select");
+
+    function refreshPetOptions() {
+        petSelect.replaceChildren();
+
+        pets.forEach(pet => {
+            petSelect.add(new Option(pet.name, pet.id));
+        });
+    }
+
+    refreshPetOptions();
+
+    const dryButton = document.createElement("button");
+    dryButton.type = "button";
+    dryButton.textContent = "Add Dry Feeding";
+
+    const wetButton = document.createElement("button");
+    wetButton.type = "button";
+    wetButton.textContent = "Add Wet Feeding";
+
+    async function addFeeding(type) {
+        const date = dateInput.value;
+        const petId = petSelect.value;
+
+        const pet = pets.find(item => item.id === petId);
+
+        if (!date || !pet) {
+            alert("Select a valid date and pet.");
+            return;
+        }
+
+        const history = getFeedingHistory();
+        const existingDay = history.find(
+            record => record.date === date
+        );
+
+        const existingPet = (
+            existingDay?.pets || existingDay?.cats || []
+        ).find(item => item.id === petId);
+
+        // Reuse the existing history controls when the selected pet already has a record for that day.
+        if (existingPet) {
+            alert(
+                "A record already exists for this pet and date. " +
+                "Use Add Dry Feeding or Add Wet Feeding " +
+                "inside that day's Feeding History details."
+            );
+
+            document.getElementById("historyPetFilter").value = "all";
+            document.getElementById("historyStartDate").value = date;
+            document.getElementById("historyEndDate").value = date;
+
+            displayFeedingHistory();
+            return;
+        }
+
+        let feeding;
+
+        if (type === "wet") {
+            feeding = await showHistoricalWetFeedingDialog(
+                pet.name
+            );
+
+            if (!feeding) return;
+        } else {
+            const gramsInput = prompt(
+                `Enter dry food quantity in grams for ${pet.name}:`
+            );
+
+            if (gramsInput === null) return;
+
+            const grams = Number(gramsInput);
+
+            if (
+                gramsInput.trim() === "" ||
+                !Number.isFinite(grams) ||
+                grams <= 0
+            ) {
+                alert("Enter a valid quantity greater than zero.");
+                return;
+            }
+
+            const timeInput = prompt(
+                "Enter feeding time (HH:MM):",
+                "10:30"
+            );
+
+            if (timeInput === null) return;
+
+            feeding = {
+                grams,
+                time: normalizeFeedingTime(timeInput)
+            };
+
+            if (!feeding.time) {
+                alert("Enter a valid feeding time.");
+                return;
+            }
+        }
+
+        const saved = saveFeedingToHistoricalDate(
+            date,
+            petId,
+            type,
+            feeding
+        );
+
+        if (!saved) {
+            alert("Unable to save the historical feeding.");
+            return;
+        }
+
+        document.getElementById("historyPetFilter").value = "all";
+        document.getElementById("historyStartDate").value = date;
+        document.getElementById("historyEndDate").value = date;
+
+        displayFeedingHistory();
+    }
+
+    dryButton.addEventListener("click", () => {
+        addFeeding("dry");
+    });
+
+    wetButton.addEventListener("click", () => {
+        addFeeding("wet");
+    });
+
+    controls.append(
+        dateLabel,
+        dateInput,
+        petLabel,
+        petSelect,
+        dryButton,
+        wetButton
+    );
+
+    section.appendChild(controls);
+
+    const entryContainer = document.getElementById("historicalEntryContainer");
+    entryContainer.appendChild(section);
+
+    // Keep pet options current when the pet list changes.
+    return refreshPetOptions;
+}
+
 /* Filter the feeding history results */
 function initializeFeedingHistoryFilters() {
     const petFilter = document.getElementById("historyPetFilter");
@@ -3297,4 +3593,5 @@ displayDryFoodCalculator();
 updateAutomaticFeedings();
 displayDryFoodCalculator();
 initializeFeedingHistoryFilters();
+const refreshHistoricalPetOptions = initializeHistoricalDateEntry();
 displayFeedingHistory();
