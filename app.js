@@ -95,7 +95,6 @@ function savePets() {
 
 let pets = loadPets();
 
-
 const weightForm = document.getElementById("weightForm");
 const weightPetSelect = document.getElementById("weightPet");
 const weightDateInput = document.getElementById("weightDate");
@@ -1927,59 +1926,175 @@ const cancelPetButton = document.getElementById("cancel-pet-button");
 
 let editingPetId = null;
 
+const petAvatarSelect = document.getElementById("pet-avatar");
+const petPhotoField = document.getElementById("pet-photo-field");
+const petPhotoInput = document.getElementById("pet-photo");
+
+function updatePetPhotoField() {
+    petPhotoField.hidden = petAvatarSelect.value !== "photo";
+}
+
+petAvatarSelect.addEventListener("change", updatePetPhotoField);
+
+function resizePetPhoto(file) {
+    return new Promise((resolve, reject) => {
+        if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+            reject(new Error("Choose a JPG, PNG, or WebP image."));
+            return;
+        }
+
+        const image = new Image();
+        const url = URL.createObjectURL(file);
+
+        image.onload = () => {
+            URL.revokeObjectURL(url);
+
+            const canvas = document.createElement("canvas");
+            canvas.width = 160;
+            canvas.height = 160;
+
+            const context = canvas.getContext("2d");
+
+            if (!context) {
+                reject(new Error("Unable to process image."));
+                return;
+            }
+
+            const size = Math.min(image.width, image.height);
+
+            context.drawImage(
+                image,
+                (image.width - size) / 2,
+                (image.height - size) / 2,
+                size,
+                size,
+                0,
+                0,
+                160,
+                160
+            );
+
+            resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+
+        image.onerror = () => {
+            URL.revokeObjectURL(url);
+            reject(new Error("Unable to read photo."));
+        };
+
+        image.src = url;
+    });
+}
+
 addPetButton.addEventListener("click", () => {
     editingPetId = null;
-
     petForm.reset();
-    petForm.hidden = false;
+    petPhotoInput.value = "";
+    updatePetPhotoField();
     document.getElementById("pet-form-title").textContent = "Add Pet";
+    petForm.hidden = false;
 });
 
 cancelPetButton.addEventListener("click", () => {
     editingPetId = null; 
     petForm.reset();
+    petPhotoInput.value = "";
+    updatePetPhotoField();
     petForm.hidden = true;
 });
 
-petForm.addEventListener("submit", event => {
+petForm.addEventListener("submit", async event => {
     event.preventDefault();
 
     const name = document.getElementById("pet-name").value.trim();
     const species = document.getElementById("pet-species").value;
+    const appearance = {
+        avatar: document.getElementById("pet-avatar").value,
+        color: document.getElementById("pet-color").value
+    };
+
+    const existingPet = pets.find(pet => pet.id === editingPetId);
+
+    // Preserve any previously uploaded photo
+    appearance.photo = existingPet?.appearance?.photo ?? null;
+
+    if (appearance.avatar === "photo") {
+        if (petPhotoInput.files.length > 0) {
+            try {
+                appearance.photo = await resizePetPhoto(petPhotoInput.files[0]);
+            } catch (error) {
+                alert(error.message);
+                return;
+            }
+        }
+
+        if (!appearance.photo) {
+            alert("Please choose a photo for this pet.");
+            return;
+        }
+    }
 
     if (!name) {
         alert("Please enter a pet name.");
         return;
     }
 
+    // Prepare the updated pet list without modifying the original
+    const updatedPets = pets.map(pet => ({
+        ...pet,
+        appearance: pet.appearance ? { ...pet.appearance } : undefined
+    }));
+
+    let newPet = null;
+
     if (editingPetId !== null) {
-        // Update existing pet without changing its ID
-        const pet = pets.find(pet => pet.id === editingPetId);
+        const pet = updatedPets.find(pet => pet.id === editingPetId);
 
         if (!pet) {
-            alert("Pet not found");
+            alert("Pet not found.");
             return;
         }
 
         pet.name = name;
         pet.species = species;
+        pet.appearance = appearance;
     } else {
-        const newPet = {
-                id: crypto.randomUUID(),
-                name,
-                species,
-                birthdate: "",
-                dailyCalories: 0
-            };
+        newPet = {
+            id: crypto.randomUUID(),
+            name,
+            species,
+            birthdate: "",
+            dailyCalories: 0,
+            appearance
+        };
 
-            pets.push(newPet);
-            wetFeedings[newPet.id] = [];
+        updatedPets.push(newPet);
     }
-    
-    savePets();
+
+    // Save to browser storage before changing application state
+    try {
+        localStorage.setItem(
+            PETS_STORAGE_KEY,
+            JSON.stringify(updatedPets)
+        ); 
+        // throw new Error("Simulated storage failure.");
+    } catch (error) {
+        console.error("Unable to save pet profile:", error);
+        alert("Unable to save pet profile. Browser storage may be full.");
+        return;
+    }
+
+    // Only update application state after storage succeeds
+    pets = updatedPets;
+
+    if (newPet) {
+        wetFeedings[newPet.id] = [];
+    }
 
     editingPetId = null;
     petForm.reset();
+    petPhotoInput.value = "";
+    updatePetPhotoField();
     petForm.hidden = true;
 
     displayPetList();
@@ -2022,12 +2137,128 @@ function removePet(petId) {
     refreshPetViews();
 }
 
+function getPetAppearance(pet) {
+    return {
+        avatar: pet.appearance?.avatar ?? "default",
+        color: pet.appearance?.color ?? "#dce8df",
+        photo: pet.appearance?.photo ?? null
+    };
+}
+
+function getContrastColor(hexColor) {
+    const rgb = hexColor.replace("#", "").match(/.{2}/g).map(value => {
+        const channel = parseInt(value, 16) / 255;
+
+        return channel <= 0.04045
+            ? channel / 12.92
+            : ((channel + 0.055) / 1.055) ** 2.4;
+    });
+
+    const luminance =
+        0.2126 * rgb[0] +
+        0.7152 * rgb[1] +
+        0.0722 * rgb[2];
+
+    return luminance > 0.179 ? "#222222" : "#ffffff";
+}
+
+function createPetAvatar(pet) {
+    const appearance = getPetAppearance(pet);
+
+    const avatar = document.createElement("span");
+    avatar.className = "pet-avatar";
+    avatar.style.backgroundColor = appearance.color;
+   
+    if (appearance.avatar === "photo" && appearance.photo) {
+        const image = document.createElement("img");
+        image.src = appearance.photo;
+        image.alt = `${pet.name}'s photo`;
+        image.className = "pet-avatar-photo";
+
+        avatar.appendChild(image);
+        return avatar;
+    }
+
+    avatar.style.color = getContrastColor(appearance.color);
+
+    const selectedAvatar =
+        appearance.avatar === "default"
+            ? pet.species
+            : appearance.avatar;
+
+    if (selectedAvatar === "initial") {
+        avatar.textContent = pet.name.charAt(0).toUpperCase();
+        return avatar;
+    }
+
+    const iconPaths = {
+        cat: `
+            <path d="
+                    M4 9
+                    L3.5 4
+                    L8.5 7
+                    Q12 6 15.5 7
+                    L20.5 4
+                    L20 9
+                    C21 13 20 17 17 19
+                    Q12 22 7 19
+                    C4 17 3 13 4 9
+                    Z
+                "/>
+                <path d="M8.5 13h.01M15.5 13h.01"/>
+                <path d="m11 16 1 1 1-1"/>
+        `,
+        dog: `
+            <path d="M8 6 4 4 2 10l3 3"/>
+            <path d="m16 6 4-2 2 6-3 3"/>
+            <path d="M5 11a7 7 0 0 1 14 0v4a7 7 0 0 1-14 0v-4Z"/>
+            <path d="M9 13h.01M15 13h.01"/>
+            <path d="m11 17 1 1 1-1"/>
+        `,
+        paw: `
+            <ellipse cx="12" cy="16.5" rx="4.5" ry="3.5"/>
+            <ellipse cx="5.5" cy="11" rx="1.5" ry="2"/>
+            <ellipse cx="9.5" cy="7.5" rx="1.5" ry="2"/>
+            <ellipse cx="14.5" cy="7.5" rx="1.5" ry="2"/>
+            <ellipse cx="18.5" cy="11" rx="1.5" ry="2"/>
+        `
+    };
+
+    const svg = document.createElementNS(
+        "http://www.w3.org/2000/svg",
+        "svg"
+    );
+
+    svg.setAttribute("viewBox", "0 0 24 24");
+
+    if (selectedAvatar === "cat") {
+        svg.style.transform = "translateY(1px)";
+    }
+
+    svg.setAttribute("width", "24");
+    svg.setAttribute("height", "24");
+    svg.setAttribute("fill", "none");
+    svg.setAttribute("stroke", "currentColor");
+    svg.setAttribute("stroke-width", "1.7");
+    svg.setAttribute("stroke-linecap", "round");
+    svg.setAttribute("stroke-linejoin", "round");
+    svg.innerHTML = iconPaths[selectedAvatar] ?? iconPaths.paw;
+
+    avatar.appendChild(svg);
+
+    return avatar;
+}
+
 function displayPetList() {
     petList.replaceChildren();
 
     pets.forEach(pet => {
         const row = document.createElement("div");
         row.className = "pet-settings-row";
+
+        const appearance = getPetAppearance(pet);
+
+        const avatar = createPetAvatar(pet);
 
         const name = document.createElement("span");
         name.textContent = `${pet.name} (${pet.species})`;
@@ -2040,6 +2271,15 @@ function displayPetList() {
             editingPetId = pet.id;
             document.getElementById("pet-name").value = pet.name;
             document.getElementById("pet-species").value = pet.species;
+
+            const appearance = getPetAppearance(pet);
+
+            document.getElementById("pet-avatar").value = appearance.avatar;
+            document.getElementById("pet-color").value = appearance.color;
+
+            petPhotoInput.value = "";
+            updatePetPhotoField();
+
             document.getElementById("pet-form-title").textContent = `Edit ${pet.name}`;
             petForm.hidden = false;
         });
@@ -2054,7 +2294,7 @@ function displayPetList() {
             removePet(pet.id);
         });
 
-        row.append(name, editButton, removeButton);
+        row.append(avatar, name, editButton, removeButton);
         petList.appendChild(row);
     });
 }
