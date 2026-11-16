@@ -936,7 +936,6 @@ main {
     padding: 0.2rem 0.5rem;
 }
 
-
 .duplicate-feeding-dialog {
     width: min(420px, calc(100% - 32px));
     max-height: calc(100dvh - 32px);
@@ -998,6 +997,32 @@ main {
 .duplicate-feeding-actions button:focus-visible {
     outline: 3px solid #668a74;
     outline-offset: 2px;
+}
+
+
+.historical-wet-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.historical-wet-form label {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.historical-wet-form select,
+.historical-wet-form input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #bbb;
+    border-radius: 6px;
+    font: inherit;
+}
+
+.historical-wet-form .duplicate-feeding-actions {
+    margin-top: 16px;
 }
 
 @media (max-width: 600px) {
