@@ -1302,7 +1302,11 @@ function displayDryFoodCalculator() {
             const totalConsumedCalories = dryCalories + consumedWetCalories;          
             
             /* Calculate how many calories pet has consumed over daily target */
-            const excessCalories = Math.max(0, totalConsumedCalories - pet.dailyCalories);
+            const hasCalorieTarget = Number.isFinite(pet.dailyCalories) && pet.dailyCalories > 0;
+
+            const excessCalories = hasCalorieTarget
+                ? Math.max(0, totalConsumedCalories - pet.dailyCalories)
+                : 0;
 
             const progressBarWidth = pet.dailyCalories > 0
             ? Math.min(100, (totalConsumedCalories / pet.dailyCalories) * 100)
@@ -1335,32 +1339,34 @@ function displayDryFoodCalculator() {
                                         : 'calorie-target-default'
                             }">
                             <span>Daily Target</span>
-                            <strong>${pet.dailyCalories.toFixed(1)}</strong>
+                            <strong>${hasCalorieTarget ? pet.dailyCalories.toFixed(1): "Not set"}</strong>
                             <small>kcal</small>
                         </div>
                     </div>
+                    ${hasCalorieTarget ? `
+                        <div class="calorie-progress ${excessCalories > 0.05 ? 'is-over' : actualProgress >= 100 ? 'is-complete' : ''}"
+                            role="progressbar"
+                            aria-label="${pet.name} total calorie consumption"
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                            aria-valuenow="${Math.min(100, actualProgress).toFixed(0)}">
 
-                    <div class="calorie-progress ${excessCalories > 0.05 ? 'is-over' : actualProgress >= 100 ? 'is-complete' : ''}"
-                        role="progressbar"
-                        aria-label="${pet.name} total calorie consumption"
-                        aria-valuemin="0"
-                        aria-valuemax="100"
-                        aria-valuenow="${Math.min(100, actualProgress).toFixed(0)}">
-                        
-                        <div class="calorie-progress-dry"
-                            style="width: ${pet.dailyCalories > 0
-                                ? Math.min(100, dryCalories / pet.dailyCalories * 100)
-                                : 0}%">
+                            <div class="calorie-progress-dry"
+                                style="width: ${pet.dailyCalories > 0
+                                    ? Math.min(100, dryCalories / pet.dailyCalories * 100)
+                                    : 0}%">
+                            </div>
+
+                            <div class="calorie-progress-wet"
+                                style="width: ${pet.dailyCalories > 0
+                                    ? Math.min(
+                                        100 - Math.min(100, dryCalories / pet.dailyCalories * 100),
+                                        consumedWetCalories / pet.dailyCalories * 100
+                                    )
+                                    : 0}%">
+                            </div>
                         </div>
-
-                        <div class="calorie-progress-wet"
-                            style="width: ${pet.dailyCalories > 0
-                                ? Math.min(
-                                    100 - Math.min(100, dryCalories / pet.dailyCalories * 100),
-                                    consumedWetCalories / pet.dailyCalories * 100
-                                )
-                                : 0}%">
-                    </div>
+                    ` : `<p class="calorie-target-not-set">Set a daily calorie target in Settings.</p>`}
 
                     <p class="calorie-total">
                         ${totalConsumedCalories.toFixed(1)} / 
