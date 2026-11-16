@@ -1441,7 +1441,7 @@ function displayDryFoodCalculator() {
         }
 
         section.prepend(heading);
-        section.append(result);
+        heading.after(result);
         dryFoodContainer.appendChild(section);
 
         const wetFoodSection = document.createElement("div");

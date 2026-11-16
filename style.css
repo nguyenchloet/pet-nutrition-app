@@ -619,7 +619,7 @@ main {
 }
 
 .calorie-summary {
-    margin-top: 12px;
+    margin: 12px 0;
     padding: 10px;
     border-radius: 10px;
     background: #f1f6f1;
