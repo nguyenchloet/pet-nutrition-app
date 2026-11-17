@@ -2016,6 +2016,13 @@ petForm.addEventListener("submit", async event => {
     const species = document.getElementById("pet-species").value;
     const birthdate = document.getElementById("pet-birthdate").value;
     const sex = document.getElementById("pet-sex").value;
+
+    const dailyCaloriesInput = document.getElementById("pet-daily-calories").value;
+
+    const dailyCalories = dailyCaloriesInput === ""
+        ? 0
+        : Number(dailyCaloriesInput);
+
     const sterilizationStatus = document.getElementById("pet-sterilization").value;
     const breed = document.getElementById("pet-breed").value.trim();
     const coloring = document.getElementById("pet-coloring").value.trim();
@@ -2070,6 +2077,7 @@ petForm.addEventListener("submit", async event => {
         pet.name = name;
         pet.species = species;
         pet.birthdate = birthdate;
+        pet.dailyCalories = dailyCalories;
         pet.sex = sex;
         pet.sterilizationStatus = sterilizationStatus;
         pet.breed = breed;
@@ -2086,7 +2094,7 @@ petForm.addEventListener("submit", async event => {
             sterilizationStatus,
             breed,
             coloring,
-            dailyCalories: 0,
+            dailyCalories,
             appearance
         };
 
@@ -2294,6 +2302,7 @@ function displayPetList() {
             document.getElementById("pet-name").value = pet.name;
             document.getElementById("pet-species").value = pet.species;
             document.getElementById("pet-birthdate").value = pet.birthdate ?? "";
+            document.getElementById("pet-daily-calories").value = pet.dailyCalories > 0 ? pet.dailyCalories : "";
             document.getElementById("pet-sex").value = pet.sex ?? "";
             document.getElementById("pet-sterilization").value = pet.sterilizationStatus ?? "unknown";
             document.getElementById("pet-breed").value = pet.breed ?? "";
