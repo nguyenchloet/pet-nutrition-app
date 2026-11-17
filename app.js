@@ -891,6 +891,14 @@ function displayFeedingDisclaimers() {
 }
 
 function calculateWetFood(pet, remainingCalories, type, flavor) {
+    if (!Number.isFinite(pet.dailyCalories) || pet.dailyCalories <= 0) {
+        return null;
+    }
+
+    if (!Number.isFinite(remainingCalories) || remainingCalories <= 0) {
+        return null;
+    }
+    
     if (type === "canned") {
         const canned = cannedRecipes[flavor];
 
@@ -1442,7 +1450,21 @@ function displayDryFoodCalculator() {
 
                     dinnerResult.append(totalLabel, totalAmount);
                 } else {
-                    dinnerResult.textContent = "No recipe available.";
+                    const hasCalorieTarget = Number.isFinite(pet.dailyCalories) && pet.dailyCalories > 0;
+
+                    if (!hasCalorieTarget) {
+                        dinnerResult.textContent =
+                            "Set a daily calorie target in Settings to calculate meals.";
+                    } else if (remainingCalories <= 0) {
+                        dinnerResult.textContent =
+                            "No additional calories remaining for dinner.";
+                    } else if (selectWetFoodType === "homemade") {
+                        dinnerResult.textContent =
+                            `No homemade recipe configured for ${pet.name}.`;
+                    } else {
+                        dinnerResult.textContent =
+                            "No valid meal calculation available.";
+                    }
                 }
         }
 
