@@ -207,6 +207,19 @@
                                         required
                                     >
                                 </div>
+
+                                <div class="pet-form-field">
+                                    <label for="pet-nickname">Nickname (optional)</label>
+                                    <input
+                                        type="text"
+                                        id="pet-nickname"
+                                        placeholder="e.g., Gus Jr."
+                                    >
+                                    <small>
+                                        Used to distinguish pets with the same name.
+                                    </small>
+                                </div>
+
                                 <div class="pet-form-field">
                                     <label for="pet-species">Species</label>
                                     <select id="pet-species">
@@ -274,6 +287,19 @@
                         <details class="pet-profile-section">
                             <summary>Profile Settings</summary>
                             <div class="pet-form-grid">
+
+                                <div class="pet-form-field">
+                                    <label for="pet-tracking-status">Tracking Status</label>
+                                    <select id="pet-tracking-status">
+                                        <option value="active">Active</option>
+                                        <option value="inactive">Inactive</option>
+                                        <option value="deceased">Deceased</option>
+                                    </select>
+                                    <small>
+                                        Inactive and deceased pets retain their profiles and history.
+                                    </small>
+                                </div>
+
                                 <div class="pet-form-field">
                                     <label for="pet-avatar">Avatar</label>
                                     <select id="pet-avatar">
