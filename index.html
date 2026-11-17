@@ -307,6 +307,112 @@
                             </div>
                         </details>
 
+                        <details class="pet-profile-section">
+                            <summary>Medical Information</summary>
+
+                            <div class="pet-form-grid">
+                                <div class="form-group">
+                                    <label for="pet-allergies">Allergies</label>
+                                    <textarea id="pet-allergies" rows="2"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-conditions">Medical Conditions</label>
+                                    <textarea id="pet-conditions" rows="2"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-medications">Medications</label>
+                                    <textarea id="pet-medications" rows="2"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-dietary-restrictions">Dietary Restrictions</label>
+                                    <textarea id="pet-dietary-restrictions" rows="2"></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-medical-notes">Medical Notes</label>
+                                    <textarea id="pet-medical-notes" rows="3"></textarea>
+                                </div>
+                            </div>
+                        </details>
+
+                        <details class="pet-profile-section">
+                            <summary>Veterinary Information</summary>
+
+                            <div class="pet-form-grid">
+                                <div class="form-group">
+                                    <label for="pet-vet-clinic">Veterinary Clinic</label>
+                                    <input type="text" id="pet-vet-clinic">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-vet-name">Veterinarian</label>
+                                    <input type="text" id="pet-vet-name">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-vet-phone">Phone Number</label>
+                                    <input type="tel" id="pet-vet-phone">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-vet-last-visit">Last Visit</label>
+                                    <input type="date" id="pet-vet-last-visit">
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-vet-next-appointment">Next Appointment</label>
+                                    <input type="date" id="pet-vet-next-appointment">
+                                </div>
+                            </div>
+
+                            <div class="previous-vets-section">
+                                <h4>Previous Veterinarians</h4>
+
+                                <div id="previous-vets-list"></div>
+
+                                <button type="button" id="add-previous-vet">
+                                    + Add Previous Veterinarian
+                                </button>
+                            </div>
+                        </details>
+
+                        <details class="pet-profile-section">
+                            <summary>Microchip Information</summary>
+
+                            <div class="pet-form-grid">
+                                <div class="form-group">
+                                    <label for="pet-microchipped">Microchipped?</label>
+                                    <select id="pet-microchipped">
+                                        <option value="no">No</option>
+                                        <option value="yes">Yes</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div id="pet-microchip-details" class="pet-form-grid" hidden>
+                                <div class="form-group">
+                                    <label for="pet-microchip-number">Microchip Number</label>
+                                    <input
+                                        type="text"
+                                        id="pet-microchip-number"
+                                        autocomplete="off"
+                                    >
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="pet-microchip-company">Registration Company</label>
+                                    <input
+                                        type="text"
+                                        id="pet-microchip-company"
+                                        placeholder="e.g., HomeAgain"
+                                    >
+                                </div>
+                            </div>
+                        </details>
+
                         <div class="pet-form-actions">
                             <button type="submit">Save Pet</button>
                             <button type="button" id="cancel-pet-button">Cancel</button>

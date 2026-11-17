@@ -1943,6 +1943,8 @@ saveFeedingsButton.addEventListener("click", () => {
 /* Settings: add a pet */
 
 const petForm = document.getElementById("pet-form");
+const previousVetsList = document.getElementById("previous-vets-list");
+const addPreviousVetButton = document.getElementById("add-previous-vet");
 const petList = document.getElementById("pet-list");
 const addPetButton = document.getElementById("add-pet-button");
 const cancelPetButton = document.getElementById("cancel-pet-button");
@@ -2012,8 +2014,12 @@ function resizePetPhoto(file) {
 addPetButton.addEventListener("click", () => {
     editingPetId = null;
     petForm.reset();
+    previousVetsList.replaceChildren();
+
     petPhotoInput.value = "";
     updatePetPhotoField();
+    updateMicrochipFields();
+
     document.getElementById("pet-form-title").textContent = "Add Pet";
     petForm.hidden = false;
 });
@@ -2021,10 +2027,24 @@ addPetButton.addEventListener("click", () => {
 cancelPetButton.addEventListener("click", () => {
     editingPetId = null; 
     petForm.reset();
+    previousVetsList.replaceChildren();
+
     petPhotoInput.value = "";
     updatePetPhotoField();
+    updateMicrochipFields();
+
     petForm.hidden = true;
 });
+
+const microchippedSelect = document.getElementById("pet-microchipped");
+const microchipDetails = document.getElementById("pet-microchip-details");
+
+function updateMicrochipFields() {
+    microchipDetails.hidden = microchippedSelect.value !== "yes";
+}
+
+microchippedSelect.addEventListener("change", updateMicrochipFields);
+updateMicrochipFields();
 
 petForm.addEventListener("submit", async event => {
     event.preventDefault();
@@ -2049,7 +2069,42 @@ petForm.addEventListener("submit", async event => {
         color: document.getElementById("pet-color").value
     };
 
+    const microchip = {
+        isMicrochipped: microchippedSelect.value === "yes",
+        number: document.getElementById("pet-microchip-number").value.trim(),
+        registrationCompany: document.getElementById("pet-microchip-company").value.trim()
+    };
+
+    const medical = {
+        allergies: document.getElementById("pet-allergies").value.trim(),
+        conditions: document.getElementById("pet-conditions").value.trim(),
+        medications: document.getElementById("pet-medications").value.trim(),
+        dietaryRestrictions: document.getElementById("pet-dietary-restrictions").value.trim(),
+        notes: document.getElementById("pet-medical-notes").value.trim()
+    };
+
     const existingPet = pets.find(pet => pet.id === editingPetId);
+
+    const previousVets = Array.from(
+        previousVetsList.querySelectorAll(".previous-vet-entry")
+    ).map(entry => ({
+        id: entry.dataset.id || crypto.randomUUID(),
+        clinic: entry.querySelector(".previous-vet-clinic").value.trim(),
+        veterinarian: entry.querySelector(".previous-vet-name").value.trim(),
+        phone: entry.querySelector(".previous-vet-phone").value.trim(),
+        startDate: entry.querySelector(".previous-vet-start").value,
+        endDate: entry.querySelector(".previous-vet-end").value,
+        notes: entry.querySelector(".previous-vet-notes").value.trim()
+    }));
+
+    const veterinary = {
+        clinic: document.getElementById("pet-vet-clinic").value.trim(),
+        veterinarian: document.getElementById("pet-vet-name").value.trim(),
+        phone: document.getElementById("pet-vet-phone").value.trim(),
+        lastVisit: document.getElementById("pet-vet-last-visit").value,
+        nextAppointment: document.getElementById("pet-vet-next-appointment").value,
+        previousVets
+    };
 
     // Preserve any previously uploaded photo
     appearance.photo = existingPet?.appearance?.photo ?? null;
@@ -2100,6 +2155,9 @@ petForm.addEventListener("submit", async event => {
         pet.breed = breed;
         pet.coloring = coloring;
         pet.appearance = appearance;
+        pet.microchip = microchip;
+        pet.medical = medical;
+        pet.veterinary = veterinary;
 
     } else {
         newPet = {
@@ -2112,7 +2170,10 @@ petForm.addEventListener("submit", async event => {
             breed,
             coloring,
             dailyCalories,
-            appearance
+            appearance,
+            microchip,
+            medical,
+            veterinary
         };
 
         updatedPets.push(newPet);
@@ -2146,6 +2207,53 @@ petForm.addEventListener("submit", async event => {
 
     displayPetList();
     refreshPetViews();
+});
+
+function addPreviousVetEntry(vet = {}) {
+    const entry = document.createElement("div");
+    entry.className = "previous-vet-entry";
+    entry.dataset.id = vet.id || crypto.randomUUID();
+
+    entry.innerHTML = `
+        <label>Clinic
+            <input type="text" class="previous-vet-clinic">
+        </label>
+        <label>Veterinarian
+            <input type="text" class="previous-vet-name">
+        </label>
+        <label>Phone
+            <input type="tel" class="previous-vet-phone">
+        </label>
+        <label>Start Date
+            <input type="date" class="previous-vet-start">
+        </label>
+        <label>End Date
+            <input type="date" class="previous-vet-end">
+        </label>
+        <label>Notes
+            <textarea class="previous-vet-notes"></textarea>
+        </label>
+        <button type="button" class="remove-previous-vet">
+            Remove
+        </button>
+    `;
+
+    entry.querySelector(".previous-vet-clinic").value = vet.clinic ?? "";
+    entry.querySelector(".previous-vet-name").value = vet.veterinarian ?? "";
+    entry.querySelector(".previous-vet-phone").value = vet.phone ?? "";
+    entry.querySelector(".previous-vet-start").value = vet.startDate ?? "";
+    entry.querySelector(".previous-vet-end").value = vet.endDate ?? "";
+    entry.querySelector(".previous-vet-notes").value = vet.notes ?? "";
+
+    entry.querySelector(".remove-previous-vet").addEventListener("click", () => {
+        entry.remove();
+    });
+
+    previousVetsList.appendChild(entry);
+}
+
+addPreviousVetButton.addEventListener("click", () => {
+    addPreviousVetEntry();
 });
 
 function removePet(petId) {
@@ -2303,8 +2411,6 @@ function displayPetList() {
         const row = document.createElement("div");
         row.className = "pet-settings-row";
 
-        const appearance = getPetAppearance(pet);
-
         const avatar = createPetAvatar(pet);
 
         const name = document.createElement("span");
@@ -2324,6 +2430,32 @@ function displayPetList() {
             document.getElementById("pet-sterilization").value = pet.sterilizationStatus ?? "unknown";
             document.getElementById("pet-breed").value = pet.breed ?? "";
             document.getElementById("pet-coloring").value = pet.coloring ?? "";
+
+            // Restore saved microchip information
+            microchippedSelect.value = pet.microchip?.isMicrochipped ? "yes" : "no";
+
+            document.getElementById("pet-microchip-number").value = pet.microchip?.number ?? "";
+            document.getElementById("pet-microchip-company").value = pet.microchip?.registrationCompany ?? "";
+
+            updateMicrochipFields();
+
+            document.getElementById("pet-allergies").value = pet.medical?.allergies ?? "";
+            document.getElementById("pet-conditions").value = pet.medical?.conditions ?? "";
+            document.getElementById("pet-medications").value = pet.medical?.medications ?? "";
+            document.getElementById("pet-dietary-restrictions").value = pet.medical?.dietaryRestrictions ?? "";
+            document.getElementById("pet-medical-notes").value = pet.medical?.notes ?? "";
+
+            document.getElementById("pet-vet-clinic").value = pet.veterinary?.clinic ?? "";
+            document.getElementById("pet-vet-name").value = pet.veterinary?.veterinarian ?? "";
+            document.getElementById("pet-vet-phone").value = pet.veterinary?.phone ?? "";
+            document.getElementById("pet-vet-last-visit").value = pet.veterinary?.lastVisit ?? "";
+            document.getElementById("pet-vet-next-appointment").value = pet.veterinary?.nextAppointment ?? "";
+            
+            previousVetsList.replaceChildren();
+
+            (pet.veterinary?.previousVets ?? []).forEach(vet => {
+                addPreviousVetEntry(vet);
+            });
 
             const appearance = getPetAppearance(pet);
 
