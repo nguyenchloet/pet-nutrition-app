@@ -1377,9 +1377,12 @@ function displayDryFoodCalculator() {
                     ` : `<p class="calorie-target-not-set">Set a daily calorie target in Settings.</p>`}
 
                     <p class="calorie-total">
-                        ${totalConsumedCalories.toFixed(1)} / 
-                        ${pet.dailyCalories.toFixed(1)} kcal consumed
-                        (${actualProgress.toFixed(1)}%)
+                        ${hasCalorieTarget
+                            ? ` ${totalConsumedCalories.toFixed(1)} / 
+                                ${pet.dailyCalories.toFixed(1)} kcal consumed
+                                (${actualProgress.toFixed(1)}%)`
+                            : `${totalConsumedCalories.toFixed(1)} kcal consumed (daily target not configured)`
+                        }
                     </p>
 
                     ${excessCalories > 0.05
@@ -1417,14 +1420,6 @@ function displayDryFoodCalculator() {
                         selectedProtein
                     );
                 
-                wetFoodEaten[pet.id] && wetFoodRecordedMeal[pet.id]
-                    ? wetFoodRecordedMeal[pet.id]
-                    : calculateWetFood(
-                        pet,
-                        remainingCalories,
-                        selectWetFoodType,
-                        selectedProtein
-                );
                     recipeIngredients.replaceChildren();
                     dinnerResult.replaceChildren();
 
