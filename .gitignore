@@ -1,0 +1,5 @@
+# macOS system files
+.DS_Store
+
+# Local reference images (not used by the website)
+/img/

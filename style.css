@@ -474,19 +474,6 @@ main {
     background: #f1dddd;
 }
 
-@media (max-width: 480px) {
-    #dinnerRecipes .wet-feeding-row {
-        grid-template-columns: minmax(0, 1fr) 56px max-content minmax(0, 1fr) 24px 30px;
-        gap: 4px;
-    }
-
-    #dinnerRecipes .wet-feeding-grams,
-    #dinnerRecipes .wet-feeding-time {
-        padding-right: 4px;
-        padding-left: 4px;
-    }
-}
-
 #dinnerRecipes .add-wet-feeding {
     justify-self: start;
     min-height: 32px;
@@ -741,7 +728,7 @@ main {
     font-size: 11px;
     font-weight: 550;
     letter-spacing: 0.02em;
-    text-align: left;
+    text-align: center;
 }
 
 [hidden] {
@@ -1241,6 +1228,211 @@ main {
     object-fit: cover;
 }
 
+/* Pet profile editor */
+
+#pet-form {
+    max-width: 680px;
+    margin-top: 1rem;
+    padding: 1rem;
+    background: #fafbf9;
+    border: 1px solid #e2e7e2;
+    border-radius: 10px;
+}
+
+#pet-form[hidden],
+#pet-photo-field[hidden] {
+    display: none;
+}
+
+#pet-form h4 {
+    margin: 0 0 0.75rem;
+    font-size: 1.1rem;
+}
+
+#pet-form fieldset {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem 1.25rem;
+    margin: 1.5rem 0;
+    padding: 1.25rem;
+    border: 1px solid #e2e7e2;
+    border-radius: 10px;
+    min-width: 0;
+}
+
+#pet-form legend {
+    padding: 0 0.5rem;
+    font-weight: 600;
+    font-size: 1rem;
+}
+
+/* Keep labels directly above their inputs */
+#pet-form fieldset > label {
+    align-self: end;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #454c47;
+}
+
+#pet-form input:not([type="file"]),
+#pet-form select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0.7rem 0.8rem;
+    border: 1px solid #cbd5cc;
+    border-radius: 7px;
+    background: white;
+    color: #242924;
+    font: inherit;
+}
+
+#pet-form .pet-form-field {
+    gap: 0.25rem;
+}
+
+#pet-form input:focus-visible,
+#pet-form select:focus-visible {
+    outline: 2px solid #527b63;
+    outline-offset: 2px;
+}
+
+#pet-form input[type="color"] {
+    width: 48px;
+    height: 48px;
+    padding: 4px;
+    border: 1px solid #cbd5cc;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+#pet-form input:not([type="color"]):not([type="file"]),
+#pet-form select {
+    padding: 0.45rem 0.65rem;
+    min-height: 36px;
+}
+
+#pet-form h4 {
+    margin-bottom: 0.75rem;
+}
+
+/* Collapsible sections */
+
+#pet-form .pet-profile-section {
+    margin-bottom: 0.5rem;
+    border: 1px solid #e2e7e2;
+    border-radius: 8px;
+    margin: 0.5rem 0;
+    background: #fff;
+    overflow: hidden;
+}
+
+#pet-form .pet-profile-section summary {
+    padding: 0.75rem 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#pet-form .pet-profile-section[open] summary {
+    border-bottom: 1px solid #e2e7e2;
+}
+
+#pet-form .pet-profile-section fieldset {
+    margin: 0;
+    border: none;
+}
+
+/* Two-column form layout */
+
+#pet-form .pet-form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    padding: 1rem;
+}
+
+#pet-form .pet-form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+#pet-form .pet-form-field label {
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+#pet-form input:not([type="color"]):not([type="file"]),
+#pet-form select {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #cbd5cc;
+    border-radius: 6px;
+    font: inherit;
+    background: white;
+}
+
+/* Square color picker */
+
+#pet-form input[type="color"] {
+    width: 42px;
+    height: 42px;
+    padding: 3px;
+    border: 1px solid #cbd5cc;
+    border-radius: 7px;
+    cursor: pointer;
+}
+
+/* Form buttons */
+
+#pet-form .pet-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 1rem;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+    #pet-form .pet-form-grid {
+        grid-template-columns: 1fr;
+    }
+
+    #pet-form {
+        padding: 0.75rem;
+    }
+}
+
+/* Mobile layout */
+
+@media (max-width: 480px) {
+    #dinnerRecipes .wet-feeding-row {
+        grid-template-columns: minmax(0, 1fr) 56px max-content minmax(0, 1fr) 24px 30px;
+        gap: 4px;
+    }
+
+    #dinnerRecipes .wet-feeding-grams,
+    #dinnerRecipes .wet-feeding-time {
+        padding-right: 4px;
+        padding-left: 4px;
+    }
+}
+
+@media (max-width: 600px) {
+    #pet-form {
+        padding: 1rem;
+    }
+
+    #pet-form fieldset {
+        grid-template-columns: 1fr;
+        padding: 1rem;
+    }
+}
+
 @media (max-width: 600px) {
     .weight-history-table th,
     .weight-history-table td {
@@ -1333,6 +1525,7 @@ main {
 
     .calorie-summary {
         padding: 7px;
+        width: 100%;
     }
 
     .calorie-stats {
@@ -1377,4 +1570,8 @@ main {
         scroll-behavior: auto !important;
         transition-duration: 0.01ms !important;
     }
+}
+
+[hidden] {
+    display: none !important;
 }
